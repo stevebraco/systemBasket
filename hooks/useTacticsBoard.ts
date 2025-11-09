@@ -17,6 +17,12 @@ export interface Drawing {
   temporary?: boolean;
   attachedTo?: "player" | "ball" | null;
   attachedIndex?: number | null;
+
+  // propriétés optionnelles pour les lignes/flèches
+  stroke?: string;
+  strokeWidth?: number;
+  dash?: number[];
+  tension?: number;
 }
 
 export interface Step {

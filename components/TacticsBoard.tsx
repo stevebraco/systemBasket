@@ -12,12 +12,12 @@ import {
   Group,
   Rect,
 } from "react-konva";
-import { Html } from "react-konva-utils";
+import type Konva from "konva";
+import type { KonvaEventObject } from "konva/lib/Node";
 
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card } from "./ui/card";
-import BasketBallCourtKonva from "./BasketBallCourtKonva";
 import { useResponsiveCourt } from "@/hooks/useResponsiveCourt";
 import { useTacticsBoard } from "@/hooks/useTacticsBoard";
 import useImage from "@/hooks/useImage";
@@ -29,7 +29,7 @@ export default function TacticBoard() {
   const image = useImage("/ball.png");
   const courtImage = useImage("/halfcourt.png");
 
-  const stageRef = useRef<Konva.Stage>(null);
+  const stageRef = useRef<Konva.Stage | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [videoURL, setVideoURL] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
@@ -101,7 +101,6 @@ export default function TacticBoard() {
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,
-    handleDragEnd,
     handleDragStart,
     handleCommentChange,
     playerRadius,
@@ -126,7 +125,7 @@ export default function TacticBoard() {
     if (!stageRef.current) return;
 
     const stage = stageRef.current.getStage();
-    const canvas = stage.content.children[0] as HTMLCanvasElement;
+    const canvas = stage?.toCanvas() as HTMLCanvasElement;
 
     if (!canvas.captureStream) {
       console.error("captureStream n'est pas disponible");
@@ -437,7 +436,6 @@ export default function TacticBoard() {
                     draggable={!isReplaying}
                     onDragMove={(e) => handleDragMove(i, e)}
                     onDragStart={() => handleDragStart(i)}
-                    onDragEnd={() => handleDragEnd(i)}
                     shadowColor={color}
                     shadowBlur={10}
                     shadowOffsetX={0}
@@ -626,107 +624,26 @@ export default function TacticBoard() {
 
               {/* Dessins existants */}
               {drawings.map((shape) => {
+                // si points est requis mais absent, on ignore le shape
+                if (
+                  (shape.type === "arrow" ||
+                    shape.type === "screen" ||
+                    shape.type === "line") &&
+                  !shape.points
+                ) {
+                  return null;
+                }
+
                 switch (shape.type) {
-                  // case "comment":
-                  //   return (
-                  //     <Group
-                  //       key={shape.id}
-                  //       x={shape.x}
-                  //       y={shape.y}
-                  //       draggable
-                  //       onDragMove={(e) => {
-                  //         const { x, y } = e.target.position();
-                  //         setDrawings((prev) =>
-                  //           prev.map((s) =>
-                  //             s.id === shape.id ? { ...s, x, y } : s
-                  //           )
-                  //         );
-                  //       }}
-                  //     >
-                  //       {/* Bandeau de drag visible */}
-                  //       <Rect
-                  //         width={shape.width || 180}
-                  //         height={20}
-                  //         fill="#444"
-                  //         cornerRadius={4}
-                  //         onMouseDown={(e) => (e.cancelBubble = true)} // capture le drag ici
-                  //       />
-
-                  //       {/* Poignée de redimensionnement */}
-                  //       <Rect
-                  //         x={(shape.width || 180) - 10}
-                  //         y={(shape.height || 100) - 10}
-                  //         width={10}
-                  //         height={10}
-                  //         fill="white"
-                  //         cornerRadius={2}
-                  //         draggable
-                  //         onDragMove={(e) => {
-                  //           const newWidth = Math.max(50, e.target.x());
-                  //           const newHeight = Math.max(50, e.target.y());
-                  //           setDrawings((prev) =>
-                  //             prev.map((s) =>
-                  //               s.id === shape.id
-                  //                 ? { ...s, width: newWidth, height: newHeight }
-                  //                 : s
-                  //             )
-                  //           );
-                  //         }}
-                  //       />
-
-                  //       {/* Contenu HTML du commentaire */}
-                  //       <Html>
-                  //         <div
-                  //           style={{
-                  //             width: shape.width || 180,
-                  //             height: (shape.height || 100) - 20, // laisse la place pour le bandeau
-                  //             marginTop: 20,
-                  //             position: "relative",
-                  //             pointerEvents: "auto", // autorise les clics sur textarea
-                  //           }}
-                  //         >
-                  //           <button
-                  //             onClick={() => removeDrawing(shape.id)}
-                  //             style={{
-                  //               position: "absolute",
-                  //               top: 2,
-                  //               right: 2,
-                  //               fontSize: 12,
-                  //             }}
-                  //           >
-                  //             ✕
-                  //           </button>
-                  //           <textarea
-                  //             value={shape.text || ""}
-                  //             style={{
-                  //               width: "100%",
-                  //               height: "100%",
-                  //               padding: 5,
-                  //               boxSizing: "border-box",
-                  //               background: "#2A2D3F",
-                  //               color: "white",
-                  //               border: "1px solid #4F5BD5",
-                  //               borderRadius: 4,
-                  //               resize: "none",
-                  //             }}
-                  //             placeholder="Votre commentaire…"
-                  //             onChange={(e) =>
-                  //               updateCommentText(shape.id, e.target.value)
-                  //             }
-                  //           />
-                  //         </div>
-                  //       </Html>
-                  //     </Group>
-                  //   );
                   case "arrow":
                     return (
                       <Arrow
                         key={shape.id}
-                        points={shape.points}
-                        pointerLength={getArrowHeadSize(shape.points)}
-                        pointerWidth={getArrowHeadSize(shape.points) / 2}
-                        fill={"white"}
-                        stroke={"white"}
+                        points={shape.points!} // "!" dit à TS que points n'est pas undefined
+                        pointerLength={getArrowHeadSize(shape.points!)}
+                        pointerWidth={getArrowHeadSize(shape.points!) / 2}
+                        fill="white"
+                        stroke="white"
                         strokeWidth={5}
                       />
                     );
@@ -734,7 +651,7 @@ export default function TacticBoard() {
                     return (
                       <Line
                         key={shape.id}
-                        points={shape.points}
+                        points={shape.points!}
                         stroke={shape.stroke || "blue"}
                         strokeWidth={shape.strokeWidth || 3}
                         dash={shape.dash || [10, 5]}
@@ -745,7 +662,7 @@ export default function TacticBoard() {
                     return (
                       <Line
                         key={shape.id}
-                        points={shape.points}
+                        points={shape.points!}
                         stroke={shape.stroke || "green"}
                         strokeWidth={shape.strokeWidth || 2}
                       />
@@ -754,7 +671,12 @@ export default function TacticBoard() {
                     return (
                       <TShape
                         key={shape.id}
-                        shapeProps={shape}
+                        shapeProps={{
+                          ...shape,
+                          x: shape.x ?? 0,
+                          y: shape.y ?? 0,
+                          rotation: shape.rotation ?? 0,
+                        }}
                         isSelected={shape.id === selectedId}
                         onSelect={() => setSelectedId(shape.id)}
                         onChange={(newAttrs) => {
