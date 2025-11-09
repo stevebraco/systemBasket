@@ -33,7 +33,7 @@ export interface Step {
   ballOffset: Vec2 | null;
   comment?: string;
   drawings: Drawing[];
-  dragPaths: { [key: number]: Vec2[] }; // ✅ seulement pour les joueurs
+  dragPaths: { [key: string]: Vec2[] }; // au lieu de { [key: number]: Vec2[] }
   arrowPaths: { [key: string]: number[] };
 }
 
@@ -100,8 +100,9 @@ export function useTacticsBoard() {
   const [replaySpeed, setReplaySpeed] = useState(1200);
   const [currentComment, setCurrentComment] = useState("");
   const [dragPath, setDragPath] = useState<{
-    [key: number]: { x: number; y: number }[];
+    [key: string]: { x: number; y: number }[];
   }>({});
+
   const [lastDragTime, setLastDragTime] = useState<{ [key: number]: number }>(
     {}
   );
