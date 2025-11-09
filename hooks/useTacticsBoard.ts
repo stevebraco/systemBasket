@@ -132,7 +132,7 @@ export function useTacticsBoard() {
   //     const width = window.innerWidth;
 
   //     if (width < 640) {
-  //       setPlayerRadius(15);
+  //       setPlayerRadius(40);
   //       setBallRadius(50);
   //     } else if (width < 768) {
   //       setPlayerRadius(20);

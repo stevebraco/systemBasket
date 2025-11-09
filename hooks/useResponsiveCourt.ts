@@ -8,10 +8,12 @@ interface UseResponsiveCourtProps {
 
 export function useResponsiveCourt({
   sceneWidth,
-  sceneHeight,
+  sceneHeight: initialSceneHeight,
   maxWidth = 1200,
 }: UseResponsiveCourtProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const [sceneHeight, setSceneHeight] = useState(initialSceneHeight);
 
   const [stageSize, setStageSize] = useState({
     width: sceneWidth,
@@ -22,34 +24,23 @@ export function useResponsiveCourt({
   const updateSize = () => {
     if (!containerRef.current) return;
 
+    // 🔹 Adapter la hauteur selon la largeur de la fenêtre
+    const newSceneHeight = window.innerWidth <= 700 ? 1200 : initialSceneHeight;
+    setSceneHeight(newSceneHeight);
+
     const container = containerRef.current;
     const containerWidth = container.offsetWidth;
-    const windowWidth = window.innerWidth;
-
-    // ✅ Mode mobile: hauteur = 100vh
-    if (windowWidth <= 600) {
-      const height = window.innerHeight;
-
-      const scale = Math.min(containerWidth / sceneWidth, height / sceneHeight);
-
-      setStageSize({
-        width: containerWidth,
-        height,
-        scale,
-      });
-      return;
-    }
-
-    // ✅ Mode desktop: comportement initial
     const containerHeight = container.offsetHeight;
 
+    // ✅ Calcule un scale qui garde le ratio de la scène
     const scale = Math.min(
       containerWidth / sceneWidth,
-      containerHeight / sceneHeight
+      containerHeight / newSceneHeight
     );
 
+    // ✅ Ajuste la taille du stage pour qu’il rentre dans le conteneur
     const width = Math.min(sceneWidth * scale, maxWidth);
-    const height = sceneHeight * scale;
+    const height = newSceneHeight * scale;
 
     setStageSize({ width, height, scale });
   };

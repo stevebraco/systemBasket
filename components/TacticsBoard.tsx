@@ -473,11 +473,10 @@ export default function TacticBoard() {
                   image={image}
                   x={ball.x}
                   y={ball.y}
-                  radius={ballRadius}
                   draggable={!isReplaying}
                   onDragMove={handleBallDrag}
-                  width={25}
-                  height={25}
+                  width={ballRadius}
+                  height={ballRadius}
                 />
               )}
 
