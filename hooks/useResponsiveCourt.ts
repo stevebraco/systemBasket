@@ -25,7 +25,13 @@ export function useResponsiveCourt({
     if (!containerRef.current) return;
 
     // 🔹 Adapter la hauteur selon la largeur de la fenêtre
-    const newSceneHeight = window.innerWidth <= 700 ? 1200 : initialSceneHeight;
+    let newSceneHeight = initialSceneHeight;
+    if (window.innerWidth <= 400) {
+      newSceneHeight = 1500;
+    } else if (window.innerWidth <= 700) {
+      newSceneHeight = 1200;
+    }
+
     setSceneHeight(newSceneHeight);
 
     const container = containerRef.current;

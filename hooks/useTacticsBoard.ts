@@ -310,9 +310,86 @@ export function useTacticsBoard() {
     checkCollision();
   };
 
+  // const addStep = () => {
+  //   if (!currentSystem) return;
+  //   const now = Date.now();
+  //   const dragPathsWithBall = { ...dragPath };
+
+  //   const arrowPaths = Object.fromEntries(
+  //     Object.entries(dragPathsWithBall).map(([key, path]) => {
+  //       const points: number[] = [];
+  //       path.forEach((p) => points.push(p.x, p.y));
+  //       return [key, points];
+  //     })
+  //   );
+
+  //   const filteredDrawings = drawings;
+  //   const newStep = {
+  //     time: now,
+  //     players: [...players],
+  //     ball: { ...ball },
+  //     playerWithBall,
+  //     ballOffset,
+  //     commentIds: filteredDrawings
+  //       .filter((d) => d.type === "comment")
+  //       .map((d) => d.id),
+  //     drawings: filteredDrawings,
+  //     dragPaths: dragPathsWithBall,
+  //     arrowPaths,
+  //   };
+
+  //   let newRecording = [...currentSystem.recording];
+  //   const lastStep = newRecording[newRecording.length - 1];
+
+  //   // 🟡 On fusionne si le dernier step est proche dans le temps (ex: double clic rapide)
+  //   const isCloseInTime = lastStep && now - lastStep.time < 1500; // 1,5 sec max
+
+  //   if (isCloseInTime && lastStep) {
+  //     // Fusionner les chemins
+  //     const mergedDragPaths = { ...lastStep.dragPaths };
+
+  //     for (const key of Object.keys(newStep.dragPaths)) {
+  //       mergedDragPaths[key] = [
+  //         ...(mergedDragPaths[key] || []),
+  //         ...newStep.dragPaths[key],
+  //       ];
+  //     }
+
+  //     newRecording[newRecording.length - 1] = {
+  //       ...lastStep,
+  //       players: [...players],
+  //       ball: { ...ball },
+  //       dragPaths: mergedDragPaths,
+  //       arrowPaths: Object.fromEntries(
+  //         Object.entries(mergedDragPaths).map(([k, path]) => [
+  //           k,
+  //           path.flatMap((p) => [p.x, p.y]),
+  //         ])
+  //       ),
+  //     };
+  //   } else {
+  //     newRecording.push(newStep);
+  //   }
+
+  //   setSystems((prev) =>
+  //     prev.map((s) =>
+  //       s.id === currentSystemId ? { ...s, recording: newRecording } : s
+  //     )
+  //   );
+
+  //   // 🧹 Nettoyage après ajout
+  //   setDrawings((prev) => prev.filter((d) => d.type !== "T" || !d.temporary));
+  //   setDragPath({});
+  //   setCurrentComment("");
+  //   setDrawMode("");
+  // };
+
   const addStep = () => {
     if (!currentSystem) return;
+
     const now = Date.now();
+
+    // ✅ On reconstruit le nouveau Step
     const dragPathsWithBall = { ...dragPath };
 
     const arrowPaths = Object.fromEntries(
@@ -324,61 +401,37 @@ export function useTacticsBoard() {
     );
 
     const filteredDrawings = drawings;
-    const newStep = {
+    const newStep: Step = {
       time: now,
       players: [...players],
       ball: { ...ball },
       playerWithBall,
       ballOffset,
-      commentIds: filteredDrawings
-        .filter((d) => d.type === "comment")
-        .map((d) => d.id),
+      comment: currentComment,
       drawings: filteredDrawings,
       dragPaths: dragPathsWithBall,
       arrowPaths,
     };
 
-    let newRecording = [...currentSystem.recording];
-    const lastStep = newRecording[newRecording.length - 1];
-
-    // 🟡 On fusionne si le dernier step est proche dans le temps (ex: double clic rapide)
-    const isCloseInTime = lastStep && now - lastStep.time < 1500; // 1,5 sec max
-
-    if (isCloseInTime && lastStep) {
-      // Fusionner les chemins
-      const mergedDragPaths = { ...lastStep.dragPaths };
-
-      for (const key of Object.keys(newStep.dragPaths)) {
-        mergedDragPaths[key] = [
-          ...(mergedDragPaths[key] || []),
-          ...newStep.dragPaths[key],
-        ];
-      }
-
-      newRecording[newRecording.length - 1] = {
-        ...lastStep,
-        players: [...players],
-        ball: { ...ball },
-        dragPaths: mergedDragPaths,
-        arrowPaths: Object.fromEntries(
-          Object.entries(mergedDragPaths).map(([k, path]) => [
-            k,
-            path.flatMap((p) => [p.x, p.y]),
-          ])
-        ),
-      };
-    } else {
-      newRecording.push(newStep);
-    }
-
+    // ✅ LA RÈGLE IMPORTANTE :
+    // Si l'utilisateur a navigué dans l'historique, on coupe le futur.
     setSystems((prev) =>
-      prev.map((s) =>
-        s.id === currentSystemId ? { ...s, recording: newRecording } : s
-      )
+      prev.map((s) => {
+        if (s.id !== currentSystemId) return s;
+
+        const trimmedRecording = s.recording.slice(0, replayIndex + 1);
+
+        return {
+          ...s,
+          recording: [...trimmedRecording, newStep],
+        };
+      })
     );
 
-    // 🧹 Nettoyage après ajout
-    setDrawings((prev) => prev.filter((d) => d.type !== "T" || !d.temporary));
+    // ✅ Met à jour l’index
+    setReplayIndex((prev) => prev + 1);
+
+    // 🔄 Reset des données de dessin
     setDragPath({});
     setCurrentComment("");
     setDrawMode("");

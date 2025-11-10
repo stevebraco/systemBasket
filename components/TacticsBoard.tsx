@@ -290,7 +290,7 @@ export default function TacticBoard() {
                 <Button
                   size="sm"
                   onClick={() => goToStep(replayIndex - 1)}
-                  disabled={replayIndex <= 0}
+                  // disabled={replayIndex <= 0}
                   className="w-[49%]"
                 >
                   ◀️ Préc.
@@ -298,10 +298,7 @@ export default function TacticBoard() {
                 <Button
                   size="sm"
                   onClick={() => goToStep(replayIndex + 1)}
-                  disabled={
-                    !currentSystem ||
-                    replayIndex >= currentSystem.recording.length - 1
-                  }
+                  // disabled={replayIndex >= 0}
                   className="w-[49%]"
                 >
                   ▶️ Suiv.
