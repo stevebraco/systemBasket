@@ -24,10 +24,13 @@ export function useResponsiveCourt({
   const updateSize = () => {
     if (!containerRef.current) return;
 
-    // 🔹 Adapter la hauteur selon la largeur de la fenêtre
     let newSceneHeight = initialSceneHeight;
+
+    // ✅ Breakpoints
     if (window.innerWidth <= 400) {
-      newSceneHeight = 1500;
+      newSceneHeight = 2000;
+    } else if (window.innerWidth <= 575) {
+      newSceneHeight = 1700;
     } else if (window.innerWidth <= 700) {
       newSceneHeight = 1200;
     }
@@ -38,13 +41,11 @@ export function useResponsiveCourt({
     const containerWidth = container.offsetWidth;
     const containerHeight = container.offsetHeight;
 
-    // ✅ Calcule un scale qui garde le ratio de la scène
     const scale = Math.min(
       containerWidth / sceneWidth,
       containerHeight / newSceneHeight
     );
 
-    // ✅ Ajuste la taille du stage pour qu’il rentre dans le conteneur
     const width = Math.min(sceneWidth * scale, maxWidth);
     const height = newSceneHeight * scale;
 
