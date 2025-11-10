@@ -27,7 +27,7 @@ import TShape from "./ui/TShape";
 
 export default function TacticBoard() {
   const image = useImage("/ball.png");
-  const courtImage = useImage("/halfcourt.png");
+  const courtImage = useImage("/halfcourt98.png");
 
   const stageRef = useRef<Konva.Stage | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -222,6 +222,8 @@ export default function TacticBoard() {
       return { x: p.x + offsetX, y: p.y + offsetY };
     });
   }
+
+  console.log(stageSize);
 
   return (
     <>
