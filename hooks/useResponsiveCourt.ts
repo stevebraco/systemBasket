@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useLayoutEffect, useRef } from "react";
 
 interface UseResponsiveCourtProps {
   sceneWidth: number;
@@ -11,35 +11,38 @@ export function useResponsiveCourt({
   sceneHeight: initialSceneHeight,
   maxWidth = 1200,
 }: UseResponsiveCourtProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const [sceneHeight, setSceneHeight] = useState(initialSceneHeight);
+  // corrige l'initialisation : on utilise bien initialSceneHeight
+  const [sceneHeight, setSceneHeight] = useState<number>(initialSceneHeight);
 
   const [stageSize, setStageSize] = useState({
     width: sceneWidth,
-    height: sceneHeight,
+    height: initialSceneHeight,
     scale: 1,
   });
 
-  const updateSize = () => {
-    if (!containerRef.current) return;
+  const computeNewSceneHeight = (innerWidth: number) => {
+    if (innerWidth <= 400) return 1500;
+    if (innerWidth <= 430) return 1700;
+    if (innerWidth <= 700) return 1200;
+    return initialSceneHeight;
+  };
 
-    let newSceneHeight = initialSceneHeight;
-
-    // ✅ Breakpoints
-    if (window.innerWidth <= 400) {
-      newSceneHeight = 2000;
-    } else if (window.innerWidth <= 575) {
-      newSceneHeight = 1700;
-    } else if (window.innerWidth <= 700) {
-      newSceneHeight = 1200;
-    }
-
-    setSceneHeight(newSceneHeight);
-
+  const measureAndUpdate = () => {
     const container = containerRef.current;
-    const containerWidth = container.offsetWidth;
-    const containerHeight = container.offsetHeight;
+    if (!container) return;
+
+    // use getBoundingClientRect pour plus de précision
+    const rect = container.getBoundingClientRect();
+    const containerWidth = rect.width;
+    const containerHeight = rect.height;
+
+    // si conteneur non dimensionné, on attend
+    if (containerWidth === 0 || containerHeight === 0) return;
+
+    const newSceneHeight = computeNewSceneHeight(window.innerWidth);
+    setSceneHeight(newSceneHeight);
 
     const scale = Math.min(
       containerWidth / sceneWidth,
@@ -52,11 +55,42 @@ export function useResponsiveCourt({
     setStageSize({ width, height, scale });
   };
 
-  useEffect(() => {
-    updateSize();
-    window.addEventListener("resize", updateSize);
-    return () => window.removeEventListener("resize", updateSize);
-  }, []);
+  useLayoutEffect(() => {
+    // Mesure initiale garantie après rendu : RAF aide si le DOM est encore "en train" de se stabiliser
+    const initialRaf = requestAnimationFrame(() => {
+      measureAndUpdate();
+    });
 
-  return { containerRef, stageSize };
+    // ResizeObserver si disponible — le plus fiable pour changements de taille du conteneur
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(() => {
+        // requestAnimationFrame pour éviter trop de calculs synchrones
+        requestAnimationFrame(measureAndUpdate);
+      });
+      if (containerRef.current) ro.observe(containerRef.current);
+    } else {
+      // fallback : écoute window resize
+      window.addEventListener("resize", measureAndUpdate);
+    }
+
+    // aussi écouter resize window (utile si breakpoint dépend de window.innerWidth)
+    window.addEventListener("resize", measureAndUpdate);
+
+    return () => {
+      cancelAnimationFrame(initialRaf);
+      if (ro && containerRef.current) ro.unobserve(containerRef.current);
+      if (ro) ro.disconnect();
+      window.removeEventListener("resize", measureAndUpdate);
+      // remove duplicate if we added it twice in fallback branch (safe)
+      try {
+        window.removeEventListener("resize", measureAndUpdate);
+      } catch {
+        /* noop */
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sceneWidth, initialSceneHeight, maxWidth]);
+
+  return { containerRef, stageSize, sceneHeight };
 }
