@@ -136,6 +136,7 @@ export function CommentKonva({
           fontSize={14}
           fill="red"
           onClick={() => removeComment(comment.id)}
+          onTap={() => removeComment(comment.id)} // Mobile/tablette 🔥
         />
       )}
     </Group>

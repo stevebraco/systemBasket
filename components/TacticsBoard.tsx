@@ -403,6 +403,9 @@ export default function TacticBoard() {
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
+            onTouchStart={(e) => handleMouseDown(e)}
+            onTouchMove={(e) => handleMouseMove(e)}
+            onTouchEnd={handleMouseUp}
           >
             <Layer>
               {courtImage && (
