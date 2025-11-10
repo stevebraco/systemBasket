@@ -125,7 +125,7 @@ export default function TacticBoard() {
     if (!stageRef.current) return;
 
     const stage = stageRef.current.getStage();
-    const canvas = stage?.toCanvas() as HTMLCanvasElement;
+    const canvas = stage.content.children[0] as HTMLCanvasElement;
 
     if (!canvas.captureStream) {
       console.error("captureStream n'est pas disponible");

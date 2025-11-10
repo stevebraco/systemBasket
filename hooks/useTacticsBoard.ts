@@ -132,8 +132,8 @@ export function useTacticsBoard() {
       const width = window.innerWidth;
 
       if (width < 640) {
-        setPlayerRadius(40);
-        setBallRadius(40);
+        setPlayerRadius(65);
+        setBallRadius(60);
       } else if (width < 768) {
         setPlayerRadius(40);
         setBallRadius(40);
