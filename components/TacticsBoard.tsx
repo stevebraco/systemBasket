@@ -225,162 +225,277 @@ export default function TacticBoard() {
 
   return (
     <>
-      <Card className="col-span-2">
-        <div className="flex flex-col gap-4 w-full mx-auto p-3">
-          {/* 🎯 Vitesse de lecture */}
-          <div>
-            <h2 className="text-base font-semibold mb-1 text-center">
-              ⏱ Vitesse de lecture
-            </h2>
-            <Input
-              type="range"
-              min={400}
-              max={2000}
-              step={100}
-              value={replaySpeed}
-              onChange={(e) => setReplaySpeed(Number(e.target.value))}
+      {/* Barre de boutons fixe en bas sur deux lignes */}
+      {/* Desktop : card complète sur le côté */}
+      <Card className="col-span-2 hidden md:flex flex-col gap-4 p-3">
+        {/* 🎯 Vitesse de lecture */}
+        <div>
+          <h2 className="text-base font-semibold mb-1 text-center">
+            ⏱ Vitesse de lecture
+          </h2>
+          <Input
+            type="range"
+            min={400}
+            max={2000}
+            step={100}
+            value={replaySpeed}
+            onChange={(e) => setReplaySpeed(Number(e.target.value))}
+            className="w-full"
+          />
+          <div className="mt-1 text-center text-xs text-gray-300">
+            Étape {stepProgress}
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* 🎬 Enregistrement & Lecture */}
+        <div>
+          <h2 className="text-base font-semibold mb-1 text-center">
+            🎬 Enregistrement
+          </h2>
+          <div className="flex flex-col gap-1">
+            <Button
+              size="sm"
+              onClick={startRecording}
+              disabled={recording}
               className="w-full"
-            />
-            <div className="mt-1 text-center text-xs text-gray-300">
-              Étape {stepProgress}
+            >
+              ⏺️ Démarrer
+            </Button>
+            <Button
+              size="sm"
+              onClick={stopRecording}
+              disabled={!recording}
+              className="w-full"
+            >
+              ⏹️ Arrêter
+            </Button>
+            <Button
+              size="sm"
+              onClick={addStep}
+              disabled={isRecording || isReplaying}
+              className="w-full"
+            >
+              ➕ Ajouter étape
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleReplay}
+              disabled={!currentSystem || !currentSystem.recording.length}
+              className="w-full"
+            >
+              🔁 Lire
+            </Button>
+            <div className="flex justify-between">
+              <Button
+                size="sm"
+                onClick={() => goToStep(replayIndex - 1)}
+                disabled={replayIndex <= 0}
+                className="w-[49%]"
+              >
+                ◀️ Préc.
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => goToStep(replayIndex + 1)}
+                disabled={
+                  !currentSystem ||
+                  replayIndex >= currentSystem.recording.length - 1
+                }
+                className="w-[49%]"
+              >
+                ▶️ Suiv.
+              </Button>
             </div>
           </div>
+        </div>
 
-          <Separator />
+        {/* 🎨 Joueurs */}
+        <div>
+          <h2 className="text-base font-semibold mb-1 text-center">
+            🎨 Joueurs
+          </h2>
+          <div className="flex flex-col gap-1">
+            <Button
+              size="sm"
+              onClick={() => setShowArrows((prev) => !prev)}
+              className="w-full"
+            >
+              {showArrows ? "🧭 Masquer flèches" : "🧭 Afficher flèches"}
+            </Button>
+            <Button
+              size="sm"
+              variant={showBlackPlayers ? "secondary" : "default"}
+              onClick={() => setShowBlackPlayers(!showBlackPlayers)}
+              className="w-full"
+            >
+              {showBlackPlayers
+                ? "Masquer joueurs noirs"
+                : "Afficher joueurs noirs"}
+            </Button>
+            <Button
+              size="sm"
+              variant={showGreyPlayers ? "secondary" : "default"}
+              onClick={() => setShowGreyPlayers(!showGreyPlayers)}
+              className="w-full"
+            >
+              {showGreyPlayers
+                ? "Masquer joueurs gris"
+                : "Afficher joueurs gris"}
+            </Button>
+          </div>
+        </div>
 
-          {/* 🎬 Enregistrement & Lecture */}
-          <div>
-            <h2 className="text-base font-semibold mb-1 text-center">
-              🎬 Enregistrement
-            </h2>
-            <div className="flex flex-col gap-1">
-              <Button
-                size="sm"
-                onClick={startRecording}
-                disabled={recording}
-                className="w-full"
-              >
-                ⏺️ Démarrer
-              </Button>
-              <Button
-                size="sm"
-                onClick={stopRecording}
-                disabled={!recording}
-                className="w-full"
-              >
-                ⏹️ Arrêter
-              </Button>
-              <Button
-                size="sm"
-                onClick={addStep}
-                disabled={isRecording || isReplaying}
-                className="w-full"
-              >
-                ➕ Ajouter étape
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleReplay}
-                disabled={!currentSystem || !currentSystem.recording.length}
-                className="w-full"
-              >
-                🔁 Lire
-              </Button>
-              <div className="flex justify-between">
+        <Separator />
+
+        {/* ✏️ Dessin */}
+        <div>
+          <h2 className="text-base font-semibold mb-1 text-center">
+            ✏️ Outils
+          </h2>
+          <div className="flex flex-wrap gap-1 justify-center">
+            {["arrow", "screen", "T", "comment", "line", "erase"].map(
+              (mode) => (
                 <Button
+                  key={mode}
                   size="sm"
-                  onClick={() => goToStep(replayIndex - 1)}
-                  // disabled={replayIndex <= 0}
-                  className="w-[49%]"
+                  variant={drawMode === mode ? "secondary" : "default"}
+                  onClick={() => setDrawMode(mode)}
+                  className="w-[45%]"
                 >
-                  ◀️ Préc.
+                  {mode === "arrow" && "🏹"}
+                  {mode === "screen" && "🟦"}
+                  {mode === "T" && "🟨"}
+                  {mode === "comment" && "💬"}
+                  {mode === "line" && "➖"}
+                  {mode === "erase" && "🗑️"}
                 </Button>
-                <Button
-                  size="sm"
-                  onClick={() => goToStep(replayIndex + 1)}
-                  // disabled={replayIndex >= 0}
-                  className="w-[49%]"
-                >
-                  ▶️ Suiv.
-                </Button>
-              </div>
-            </div>
+              )
+            )}
           </div>
-          <div>
-            <h2 className="text-base font-semibold mb-1 text-center">
-              🎨 Joueurs
-            </h2>
-            <div className="flex flex-col gap-1">
-              <Button
-                size="sm"
-                onClick={() => setShowArrows((prev) => !prev)}
-                className="w-full"
-              >
-                {showArrows ? "🧭 Masquer flèches" : "🧭 Afficher flèches"}
-              </Button>
-
-              <Button
-                size="sm"
-                variant={showBlackPlayers ? "secondary" : "default"}
-                onClick={() => setShowBlackPlayers(!showBlackPlayers)}
-                className="w-full"
-              >
-                {showBlackPlayers
-                  ? "Masquer joueurs noirs"
-                  : "Afficher joueurs noirs"}
-              </Button>
-              <Button
-                size="sm"
-                variant={showGreyPlayers ? "secondary" : "default"}
-                onClick={() => setShowGreyPlayers(!showGreyPlayers)}
-                className="w-full"
-              >
-                {showGreyPlayers
-                  ? "Masquer joueurs gris"
-                  : "Afficher joueurs gris"}
-              </Button>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* ✏️ Dessin */}
-          <div>
-            <h2 className="text-base font-semibold mb-1 text-center">
-              ✏️ Outils
-            </h2>
-            <div className="flex flex-wrap gap-1 justify-center">
-              {["arrow", "screen", "T", "comment", "line", "erase"].map(
-                (mode) => (
-                  <Button
-                    key={mode}
-                    size="sm"
-                    variant={drawMode === mode ? "secondary" : "default"}
-                    onClick={() => setDrawMode(mode)}
-                    className="w-[45%]"
-                  >
-                    {mode === "arrow" && "🏹"}
-                    {mode === "screen" && "🟦"}
-                    {mode === "T" && "🟨"}
-                    {mode === "comment" && "💬"}
-                    {mode === "line" && "➖"}
-                    {mode === "erase" && "🗑️"}
-                  </Button>
-                )
-              )}
-            </div>
-          </div>
-
-          <Separator />
         </div>
       </Card>
-      <Card className="col-span-10 h-full">
+
+      {/* Mobile / tablette : barre fixe en bas avec icônes */}
+      <div className="fixed bottom-0 left-0 right-0 md:hidden bg-background p-1 z-50 border-t border-gray-300 dark:border-gray-700">
+        <div className="flex flex-wrap justify-center gap-1">
+          <Button
+            size="icon"
+            onClick={startRecording}
+            disabled={recording}
+            title="Démarrer"
+          >
+            ⏺️
+          </Button>
+          <Button
+            size="icon"
+            onClick={stopRecording}
+            disabled={!recording}
+            title="Arrêter"
+          >
+            ◼️
+          </Button>
+          <Button
+            size="icon"
+            onClick={addStep}
+            disabled={isRecording || isReplaying}
+            title="Ajouter étape"
+          >
+            ➕
+          </Button>
+          <Button
+            size="icon"
+            onClick={handleReplay}
+            disabled={!currentSystem || !currentSystem.recording.length}
+            title="Lire"
+          >
+            🔁
+          </Button>
+          <Button
+            size="icon"
+            onClick={() => goToStep(replayIndex - 1)}
+            disabled={replayIndex <= 0}
+            title="Précédent"
+          >
+            ◀️
+          </Button>
+          <Button
+            size="icon"
+            onClick={() => goToStep(replayIndex + 1)}
+            disabled={
+              !currentSystem ||
+              replayIndex >= currentSystem.recording.length - 1
+            }
+            title="Suivant"
+          >
+            ▶️
+          </Button>
+          <Button
+            size="icon"
+            onClick={() => setShowArrows((prev) => !prev)}
+            title="Afficher/Masquer flèches"
+          >
+            🧭
+          </Button>
+          <Button
+            size="icon"
+            onClick={() => setShowBlackPlayers(!showBlackPlayers)}
+            title="Afficher/Masquer joueurs noirs"
+          >
+            ⚫
+          </Button>
+          <Button
+            size="icon"
+            onClick={() => setShowGreyPlayers(!showGreyPlayers)}
+            title="Afficher/Masquer joueurs gris"
+          >
+            ⚪
+          </Button>
+          <Button
+            size="icon"
+            onClick={() => setDrawMode("arrow")}
+            title="Flèche"
+          >
+            🏹
+          </Button>
+          {/* <Button
+            size="icon"
+            onClick={() => setDrawMode("screen")}
+            title="Écran"
+          >
+            🟦
+          </Button> */}
+          <Button size="icon" onClick={() => setDrawMode("T")} title="T Shape">
+            🟨
+          </Button>
+          <Button
+            size="icon"
+            onClick={() => setDrawMode("comment")}
+            title="Commentaire"
+          >
+            💬
+          </Button>
+          {/* <Button size="icon" onClick={() => setDrawMode("line")} title="Ligne">
+            ➖
+          </Button>
+          <Button
+            size="icon"
+            onClick={() => setDrawMode("erase")}
+            title="Effacer"
+          >
+            🗑️
+          </Button> */}
+        </div>
+      </div>
+
+      <div className="col-span-12 md:col-span-10 order-1 md:order-2 h-full overflow-hidden">
         <div
           ref={containerRef}
           style={{
             width: "100%",
-            height: "100%",
-            background: "purple",
+            height: "calc(100vh - 80px)", // par exemple
+            // background: "purple",
           }}
         >
           <Stage
@@ -392,7 +507,7 @@ export default function TacticBoard() {
             style={{
               position: "relative",
               zIndex: 1,
-              background: "red",
+              // background: "red",
               cursor: drawing ? "crosshair" : "default",
               width: "100%",
               height: "100%",
@@ -725,7 +840,7 @@ export default function TacticBoard() {
             </Layer>
           </Stage>
         </div>
-      </Card>
+      </div>
     </>
   );
 }
