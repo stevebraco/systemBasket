@@ -27,7 +27,7 @@ import TShape from "./ui/TShape";
 
 export default function TacticBoard() {
   const image = useImage("/ball.png");
-  const courtImage = useImage("/halfcourt98.png");
+  const courtImage = useImage("/halfcourt.png");
 
   const stageRef = useRef<Konva.Stage | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
