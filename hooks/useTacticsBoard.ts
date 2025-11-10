@@ -82,7 +82,7 @@ export function useTacticsBoard() {
   );
 
   const [playerRadius, setPlayerRadius] = useState(30);
-  const [ballRadius, setBallRadius] = useState(50);
+  const [ballRadius, setBallRadius] = useState(30);
 
   const [showArrows, setShowArrows] = useState(true);
 
@@ -127,30 +127,30 @@ export function useTacticsBoard() {
   const playersRef = useRef(players);
   const ballRef = useRef(ball);
 
-  // useEffect(() => {
-  //   const updateRadii = () => {
-  //     const width = window.innerWidth;
+  useEffect(() => {
+    const updateRadii = () => {
+      const width = window.innerWidth;
 
-  //     if (width < 640) {
-  //       setPlayerRadius(40);
-  //       setBallRadius(50);
-  //     } else if (width < 768) {
-  //       setPlayerRadius(20);
-  //       setBallRadius(50);
-  //     } else if (width < 1024) {
-  //       setPlayerRadius(25);
-  //       setBallRadius(50);
-  //     } else {
-  //       setPlayerRadius(40);
-  //       setBallRadius(30);
-  //     }
-  //   };
+      if (width < 640) {
+        setPlayerRadius(40);
+        setBallRadius(40);
+      } else if (width < 768) {
+        setPlayerRadius(40);
+        setBallRadius(40);
+      } else if (width < 1024) {
+        setPlayerRadius(40);
+        setBallRadius(40);
+      } else {
+        setPlayerRadius(40);
+        setBallRadius(30);
+      }
+    };
 
-  //   updateRadii(); // initialisation
-  //   window.addEventListener("resize", updateRadii);
+    updateRadii(); // initialisation
+    window.addEventListener("resize", updateRadii);
 
-  //   return () => window.removeEventListener("resize", updateRadii);
-  // }, []);
+    return () => window.removeEventListener("resize", updateRadii);
+  }, []);
 
   useEffect(() => {
     playersRef.current = players;
