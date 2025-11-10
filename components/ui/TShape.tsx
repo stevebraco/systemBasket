@@ -9,7 +9,6 @@ interface TShapeProps {
     x: number;
     y: number;
     rotation: number;
-    used?: boolean;
   };
   isSelected: boolean;
   onSelect: () => void;
@@ -25,8 +24,9 @@ const TShape: React.FC<TShapeProps> = ({
   const shapeRef = useRef<any>(null);
   const trRef = useRef<any>(null);
 
+  // Quand sélectionné → relie le Transformer à la forme
   useEffect(() => {
-    if (isSelected && trRef.current) {
+    if (isSelected && trRef.current && shapeRef.current) {
       trRef.current.nodes([shapeRef.current]);
       trRef.current.getLayer().batchDraw();
     }
@@ -40,10 +40,20 @@ const TShape: React.FC<TShapeProps> = ({
         y={shapeProps.y + 60}
         rotation={shapeProps.rotation}
         draggable
-        onClick={() => {
-          onSelect(); // sélectionne le T existant
-          // ❌ Ne pas créer un nouveau T ici
+        // ✅ Sélection universelle (desktop + mobile + tablette + stylet)
+        onPointerDown={(e) => {
+          e.cancelBubble = true; // évite que le drag annule la sélection
+          onSelect();
         }}
+        // ✅ Mise à jour position lors du drag
+        onDragEnd={(e) => {
+          onChange({
+            ...shapeProps,
+            x: e.target.x() - 35,
+            y: e.target.y() - 60,
+          });
+        }}
+        // ✅ Rotation terminée → maj props
         onTransformEnd={() => {
           const node = shapeRef.current;
           onChange({ ...shapeProps, rotation: node.rotation() });
@@ -54,11 +64,13 @@ const TShape: React.FC<TShapeProps> = ({
         <Rect x={-22} y={-20} width={50} height={13} fill="black" />
       </Group>
 
+      {/* ✅ Transformer (rotation seulement) */}
       {isSelected && (
         <Transformer
           ref={trRef}
           rotateEnabled
-          enabledAnchors={[]} // pas de redimension
+          enabledAnchors={[]} // empêche redimension
+          onPointerDown={(e) => (e.cancelBubble = true)} // évite perte de sélection sur iPad
         />
       )}
     </>
